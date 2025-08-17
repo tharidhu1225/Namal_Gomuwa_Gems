@@ -85,20 +85,6 @@ export default function Header() {
             </span>
           </div>
 
-          {/* DESKTOP NAV */}
-          <nav className="hidden lg:flex space-x-8">
-            {["Home", "Shop", "About", "Contact"].map((item) => (
-              <a
-                key={item}
-                href={`/${item.toLowerCase()}`}
-                className="relative text-gray-700 hover:text-yellow-500 font-medium group transition"
-              >
-                {item}
-                <span className="absolute left-0 -bottom-1 w-0 h-0.5 bg-yellow-500 transition-all duration-300 group-hover:w-full"></span>
-              </a>
-            ))}
-          </nav>
-
           {/* SEARCH (Desktop) */}
           <div className="hidden md:block flex-1 mx-6 max-w-md">
             <div className="relative">
@@ -167,7 +153,10 @@ export default function Header() {
                 <>
                   {/* Not logged-in: Show Sign In button */}
                   <Link to="/login" className="text-sm px-3 py-1.5 rounded-full border border-yellow-500 text-yellow-600 hover:bg-yellow-500 hover:text-white transition font-medium">
-                    Sign Up
+                    Sign In
+                  </Link>
+                  <Link to="/register" className="text-sm px-3 py-1.5 rounded-full bg-yellow-500 text-white hover:bg-yellow-600 transition font-medium">
+                    Register  
                   </Link>
                 </>
               )}
@@ -175,7 +164,7 @@ export default function Header() {
 
             {/* Mobile Menu Toggle */}
             <button
-              className="lg:hidden focus:outline-none"
+              className="focus:outline-none"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               aria-label="Toggle Menu"
             >
@@ -203,7 +192,7 @@ export default function Header() {
 
       {/* MOBILE MENU */}
       <div
-        className={`lg:hidden bg-white px-4 overflow-hidden shadow-md transition-all duration-300 transform origin-top rounded-b-xl ${
+        className={` bg-white px-4 overflow-hidden shadow-md transition-all duration-300 transform origin-top rounded-b-xl ${
           mobileMenuOpen
             ? "scale-100 opacity-100 max-h-[500px] py-4"
             : "scale-95 opacity-0 max-h-0 py-0"
@@ -211,13 +200,9 @@ export default function Header() {
       >
         <nav className="space-y-3 transition-opacity duration-300">
           {["Home", "Shop", "About", "Contact"].map((item) => (
-            <a
-              key={item}
-              href={item === "Home" ? "/" : `/${item.toLowerCase()}`}
-              className="block text-gray-700 hover:text-yellow-500 font-medium transition"
-            >
-              {item}
-            </a>
+            <Link to={item === "Home" ? "/" : `/${item.toLowerCase()}`} key={item} className="block text-gray-700 hover:text-yellow-500 font-medium transition" onClick={() => setMobileMenuOpen(false)}>
+              {item}  
+            </Link>
           ))}
         </nav>
       </div>

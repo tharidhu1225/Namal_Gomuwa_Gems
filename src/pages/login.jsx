@@ -9,12 +9,8 @@ import axios from "axios";
 
 export default function LoginPage() {
   const [isShowPassword, setIsShowPassword] = useState(false);
-  const [formFields, setFormFields] = useState({
-    email: "",
-    password: "",
-  });
+  const [formFields, setFormFields] = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
-
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -33,8 +29,7 @@ export default function LoginPage() {
     e.preventDefault();
 
     if (!formFields.email || !formFields.password) {
-      toast.error("Please fill all fields.");
-      return;
+      return toast.error("Please fill all fields.");
     }
 
     try {
@@ -44,10 +39,8 @@ export default function LoginPage() {
         `${import.meta.env.VITE_BACKEND_URL}/api/user/login`,
         formFields,
         {
-          headers: {
-            "Content-Type": "application/json",
-          },
-          withCredentials: true, // ✅ Essential for cookies
+          headers: { "Content-Type": "application/json" },
+          withCredentials: true, // ✅ Send cookies (important for auth)
         }
       );
 
@@ -56,7 +49,7 @@ export default function LoginPage() {
       if (data.success) {
         toast.success("Login successful!");
 
-        // Optional: Fetch user details using access token stored in cookie
+        // Optional: fetch and store user
         const userRes = await axios.get(
           `${import.meta.env.VITE_BACKEND_URL}/api/user/user-details`,
           { withCredentials: true }
@@ -72,7 +65,7 @@ export default function LoginPage() {
         toast.error(data.message || "Login failed.");
       }
     } catch (err) {
-      console.error(err);
+      console.error("Login error:", err);
       toast.error(err.response?.data?.message || "Server error. Please try again.");
     } finally {
       setLoading(false);

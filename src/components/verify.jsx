@@ -14,24 +14,31 @@ export default function Verify() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const email = location.state?.email || "";
+  const email = location.state?.email;
 
+  // 🚨 Guard clause if email not provided
+  useEffect(() => {
+    if (!email) {
+      toast.error("No email provided for verification.");
+      navigate("/register");
+    }
+  }, [email, navigate]);
+
+  // ⏳ Cooldown Timer
   useEffect(() => {
     let timer;
     if (resendCooldown > 0) {
-      timer = setTimeout(() => setResendCooldown(resendCooldown - 1), 1000);
+      timer = setTimeout(() => setResendCooldown((prev) => prev - 1), 1000);
     }
     return () => clearTimeout(timer);
   }, [resendCooldown]);
 
-  const handleOtpChange = (value) => {
-    setOtp(value);
-  };
+  const handleOtpChange = (value) => setOtp(value);
 
   const verifyOTP = async (e) => {
     e.preventDefault();
     if (otp.length !== 6) {
-      return setMessage("Enter all 6 digits of the OTP.");
+      return setMessage("Please enter all 6 digits of the OTP.");
     }
 
     try {
@@ -50,10 +57,10 @@ export default function Verify() {
       const data = await res.json();
 
       if (data.success) {
-        toast.success(data.message);
+        toast.success(data.message || "Email verified!");
         navigate("/login");
       } else {
-        setMessage(data.message || "Verification failed.");
+        setMessage(data.message || "OTP verification failed.");
       }
     } catch (err) {
       setMessage("Something went wrong. Please try again.");
@@ -82,12 +89,12 @@ export default function Verify() {
 
       if (data.success) {
         toast.success("OTP resent successfully.");
-        setResendCooldown(30); // 30 seconds cooldown
+        setResendCooldown(30);
       } else {
         setMessage(data.message || "Failed to resend OTP.");
       }
-    } catch {
-      setMessage("Something went wrong. Please try again.");
+    } catch (err) {
+      setMessage("Failed to resend OTP. Please try again.");
     } finally {
       setResendLoading(false);
     }
@@ -108,7 +115,7 @@ export default function Verify() {
           </h2>
           <p className="text-sm text-gray-600 mb-4">
             We sent an OTP to{" "}
-            <span className="text-yellow-600 font-medium">{email}</span>
+            <span className="text-yellow-600 font-medium break-words">{email}</span>
           </p>
         </div>
 
@@ -138,8 +145,10 @@ export default function Verify() {
           <button
             onClick={resendOtp}
             disabled={resendLoading || resendCooldown > 0}
-            className={`text-yellow-600 font-medium hover:underline cursor-pointer ${
-              resendLoading || resendCooldown > 0 ? "opacity-50 cursor-not-allowed" : ""
+            className={`text-yellow-600 font-medium hover:underline ${
+              resendLoading || resendCooldown > 0
+                ? "opacity-50 cursor-not-allowed"
+                : "cursor-pointer"
             }`}
           >
             {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : "Resend"}

@@ -2,11 +2,10 @@ import React, { useState, useEffect, useRef } from "react";
 import { FaSearch } from "react-icons/fa";
 import { RiShoppingBag4Fill } from "react-icons/ri";
 import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
-import "../components/headerStyle.css"; // Assuming you have a CSS file for styles
-import { FaSignOutAlt } from "react-icons/fa";
-import { FaUser } from "react-icons/fa";
+import { FaSignOutAlt, FaUser } from "react-icons/fa";
 import { LuBox } from "react-icons/lu";
 import { Link } from "react-router-dom";
+import "../components/headerStyle.css"; // Optional: Custom styles
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -14,40 +13,28 @@ export default function Header() {
   const [user, setUser] = useState(null);
   const dropdownRef = useRef(null);
 
-  // Fetch user info from backend
+  // Fetch user info
   useEffect(() => {
-    async function fetchUser() {
+    (async () => {
       try {
         const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/user/user-details`, {
           credentials: "include",
-          cache: "no-store",
         });
-
-        if (res.ok) {
-          const data = await res.json();
-          if (data.success) {
-            setUser(data.data);
-          }
-        } else {
-          setUser(null);
-        }
-      } catch (error) {
-        console.error("User check failed:", error);
-        setUser(null);
+        const data = await res.json();
+        if (data.success) setUser(data.data);
+      } catch (err) {
+        console.error("Auth check failed", err);
       }
-    }
-
-    fetchUser();
+    })();
   }, []);
 
-  // Close dropdown on outside click
+  // Handle outside click for dropdown
   useEffect(() => {
-    function handleClickOutside(e) {
+    const handleClickOutside = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
         setDropdownOpen(false);
       }
-    }
-
+    };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
@@ -57,12 +44,10 @@ export default function Header() {
       await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/user/logout`, {
         method: "GET",
         credentials: "include",
-        cache: "no-store",
       });
-
       setUser(null);
       setDropdownOpen(false);
-      window.location.href = "/"; // Redirect to home
+      window.location.href = "/";
     } catch (err) {
       console.error("Logout error:", err);
     }
@@ -80,7 +65,7 @@ export default function Header() {
               alt="Namal Gomuwa Gems"
               className="h-12 w-auto rounded-md shadow-sm hover:scale-105 transition-transform"
             />
-            <span className="hidden md:inline text-xl md:text-2xl font-semibold text-gray-800 tracking-wide">
+            <span className="hidden md:inline text-xl font-semibold text-gray-800 tracking-wide">
               Namal Gomuwa Gems
             </span>
           </div>
@@ -100,74 +85,77 @@ export default function Header() {
           {/* ICONS */}
           <div className="flex items-center space-x-4 text-gray-700 relative">
             {/* Cart */}
-            <a href="/cart" title="Cart">
+            <Link to="/cart" title="Cart">
               <RiShoppingBag4Fill size={22} className="hover:text-yellow-500 transition" />
-            </a>
+            </Link>
 
-            {/* Profile / Sign In */}
-            <div className="relative flex items-center space-x-4 text-gray-700" ref={dropdownRef}>
+            {/* Profile / Login */}
+            <div className="relative" ref={dropdownRef}>
               {user ? (
                 <>
-                  {/* Logged-in: Profile icon */}
-                  <button
-                    onClick={() => setDropdownOpen(!dropdownOpen)}
-                    className="focus:outline-none"
-                    aria-label="Profile"
-                  >
-                    <img src={user.avatar || "https://png.pngtree.com/png-vector/20190710/ourmid/pngtree-user-vector-avatar-png-image_1541962.jpg"} alt="Profile" className="h-6 w-6 rounded-full shadow-sm hover:scale-105 transition-transform" />
+                  <button onClick={() => setDropdownOpen(!dropdownOpen)}>
+                    <img
+                      src={user.avatar || "https://i.ibb.co/2N8txhL/default-avatar.png"}
+                      alt="Avatar"
+                      className="h-8 w-8 rounded-full shadow-sm hover:scale-105 transition"
+                    />
                   </button>
 
-                  {/* Dropdown */}
                   {dropdownOpen && (
-                    <div className="absolute right-0 top-11 mt-2 w-56 bg-white rounded-lg shadow-xl border border-gray-200 z-50 py-2 animate-fade-in-down">
-  <div className="px-4 py-2 border-b border-gray-100">
-    <p className="text-sm font-medium text-gray-800">Hello, {user?.name || "User"} 👋</p>
-    <p className="text-xs text-gray-500 truncate">{user?.email}</p>
-  </div>
+                    <div className="absolute right-0 top-11 mt-2 w-56 bg-white rounded-lg shadow-xl border border-gray-200 z-50 py-2">
+                      <div className="px-4 py-2 border-b border-gray-100">
+                        <p className="text-sm font-medium text-gray-800">
+                          Hello, {user.name || "User"} 👋
+                        </p>
+                        <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                      </div>
 
-  <a
-    href="/profile"
-    className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-200 transition"
-  >
-    <span><FaUser/></span> Profile
-  </a>
+                      <Link
+                        to="/profile"
+                        className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition"
+                      >
+                        <FaUser /> Profile
+                      </Link>
 
-  <a
-    href="/orders"
-    className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-200 transition"
-  >
-    <span><LuBox/></span> My Orders
-  </a>
+                      <Link
+                        to="/orders"
+                        className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition"
+                      >
+                        <LuBox /> My Orders
+                      </Link>
 
-  <button
-    onClick={handleLogout}
-    className="flex items-center gap-2 w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-200 transition"
-  >
-    <span className="text-red-600"><FaSignOutAlt/></span> Logout
-  </button>
-</div>
-
+                      <button
+                        onClick={handleLogout}
+                        className="w-full text-left flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+                      >
+                        <FaSignOutAlt /> Logout
+                      </button>
+                    </div>
                   )}
                 </>
               ) : (
                 <>
-                  {/* Not logged-in: Show Sign In button */}
-                  <Link to="/login" className="text-sm px-3 py-1.5 rounded-full border border-yellow-500 text-yellow-600 hover:bg-yellow-500 hover:text-white transition font-medium">
-                    Sign In
-                  </Link>
-                  <Link to="/register" className="text-sm px-3 py-1.5 rounded-full bg-yellow-500 text-white hover:bg-yellow-600 transition font-medium">
-                    Register  
-                  </Link>
+                  <div className="flex items-center gap-2">
+  <Link
+    to="/login"
+    className="inline-block px-4 py-1.5 text-sm font-medium text-yellow-600 border border-yellow-500 rounded-full transition-all duration-200 hover:bg-yellow-500 hover:text-white shadow-sm"
+  >
+    Sign In
+  </Link>
+  <Link
+    to="/register"
+    className="inline-block px-4 py-1.5 text-sm font-medium text-white bg-yellow-500 rounded-full transition-all duration-200 hover:bg-yellow-600 shadow-sm"
+  >
+    Register
+  </Link>
+</div>
+
                 </>
               )}
             </div>
 
             {/* Mobile Menu Toggle */}
-            <button
-              className="focus:outline-none"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              aria-label="Toggle Menu"
-            >
+            <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
               {mobileMenuOpen ? (
                 <XMarkIcon className="h-6 w-6" />
               ) : (
@@ -192,16 +180,19 @@ export default function Header() {
 
       {/* MOBILE MENU */}
       <div
-        className={` bg-white px-4 overflow-hidden shadow-md transition-all duration-300 transform origin-top rounded-b-xl ${
-          mobileMenuOpen
-            ? "scale-100 opacity-100 max-h-[500px] py-4"
-            : "scale-95 opacity-0 max-h-0 py-0"
+        className={`bg-white px-4 overflow-hidden shadow-md transition-all duration-300 transform origin-top rounded-b-xl ${
+          mobileMenuOpen ? "scale-100 opacity-100 max-h-[500px] py-4" : "scale-95 opacity-0 max-h-0 py-0"
         }`}
       >
-        <nav className="space-y-3 transition-opacity duration-300">
+        <nav className="space-y-3">
           {["Home", "Shop", "About", "Contact"].map((item) => (
-            <Link to={item === "Home" ? "/" : `/${item.toLowerCase()}`} key={item} className="block text-gray-700 hover:text-yellow-500 font-medium transition" onClick={() => setMobileMenuOpen(false)}>
-              {item}  
+            <Link
+              key={item}
+              to={item === "Home" ? "/" : `/${item.toLowerCase()}`}
+              className="block text-gray-700 hover:text-yellow-500 font-medium transition"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              {item}
             </Link>
           ))}
         </nav>

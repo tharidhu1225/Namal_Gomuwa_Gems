@@ -16,17 +16,18 @@ const OtpInput = ({ length = 6, onChange }) => {
     if (!/^\d*$/.test(value)) return; // Only allow digits
 
     const newOtp = [...otp];
-    newOtp[index] = value.slice(-1); // Only last digit
+    newOtp[index] = value.slice(-1); // Only keep one digit
 
     setOtp(newOtp);
     onChange(newOtp.join(""));
 
+    // Move to next input if value exists
     if (value && index < length - 1) {
       inputRefs.current[index + 1]?.focus();
     }
   };
 
-  // Handle backspace and arrow keys
+  // Handle backspace and arrow navigation
   const handleKeyDown = (e, index) => {
     const key = e.key;
 
@@ -51,20 +52,20 @@ const OtpInput = ({ length = 6, onChange }) => {
   };
 
   return (
-    <div className="flex gap-3 justify-center">
+    <div className="flex gap-2 sm:gap-3 justify-center flex-wrap">
       {otp.map((digit, index) => (
         <input
           key={index}
           id={`otp-input-${index}`}
           type="text"
-          maxLength="1"
           inputMode="numeric"
           pattern="\d*"
+          maxLength="1"
           value={digit}
           ref={(el) => (inputRefs.current[index] = el)}
           onChange={(e) => handleChange(e, index)}
           onKeyDown={(e) => handleKeyDown(e, index)}
-          className="w-12 h-12 text-center text-lg border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-400 transition-all duration-200 shadow-sm"
+          className="w-10 h-10 sm:w-12 sm:h-12 text-center text-base sm:text-lg border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-400 transition-all duration-200 shadow-sm"
         />
       ))}
     </div>

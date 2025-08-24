@@ -10,6 +10,7 @@ import Home from "./pages/home";
 import ProductDetails from "./pages/ProductDetails";
 import CheckoutPage from "./pages/Checkout";
 import LoginPage from "./pages/login";
+import MyAccount from "./pages/MyAccount";
 
 export default function App() {
   return (
@@ -21,7 +22,7 @@ export default function App() {
           <Routes>
             <Route path="/" element={<Home/>} />
             <Route path="/about" element={<div className="text-center text-xl">About Page</div>} />
-            <Route path="/profile" element={<Profile />} />
+            <Route path="/profile" element={<MyAccount />} />
             <Route path="/login" element={<LoginPage/>} />
             <Route path="/register" element={<Register />} />
             <Route path="/verify" element={<Verify />} />

@@ -4,7 +4,7 @@ import Button from "@mui/material/Button";
 import { IoMdEye, IoMdEyeOff } from "react-icons/io";
 import { Link, useNavigate } from "react-router-dom";
 import { FcGoogle } from "react-icons/fc";
-import toast from "react-hot-toast"; // For nicer toast messages
+import toast from "react-hot-toast";
 import axios from "axios";
 
 export default function LoginPage() {
@@ -22,49 +22,53 @@ export default function LoginPage() {
   };
 
   const forgotPassword = () => {
-    toast.success("OTP sent to your email.");
+    toast.success("Redirecting to email verification...");
     navigate("/verify");
   };
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  if (!formFields.email || !formFields.password) {
-    toast.error("Please fill all fields.");
-    return;
-  }
-
-  try {
-    setLoading(true);
-
-    const res = await axios.post(
-      `https://backend-ngg.onrender.com/api/user/login`,
-      formFields, // ✅ actual data
-      {
-        headers: {
-          "Content-Type": "application/json",
-        },
-        withCredentials: true, // ✅ for cookies
-      }
-    );
-
-    const data = res.data;
-
-    if (data.success) {
-      toast.success("Login successful!");
-      navigate("/");
-      window.location.reload();
-    } else {
-      toast.error(data.message || "Login failed.");
+    if (!formFields.email || !formFields.password) {
+      toast.error("Please fill all fields.");
+      return;
     }
-  } catch (err) {
-    console.error(err);
-    toast.error(err.response?.data?.message || "Server error. Please try again.");
-  } finally {
-    setLoading(false);
-  }
-};
 
+    try {
+      setLoading(true);
+
+      const res = await axios.post(
+        `${import.meta.env.VITE_BACKEND_URL}/api/user/login`,
+        formFields,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+          withCredentials: true,
+        }
+      );
+
+      const data = res.data;
+
+      if (data.success) {
+        toast.success(data.message || "Login successful!");
+        // Optionally store token in localStorage
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("user_role", data.user.role);
+
+        navigate("/");
+        window.location.reload();
+      } else {
+        toast.error(data.message || "Login failed.");
+      }
+    } catch (err) {
+      toast.error(
+        err.response?.data?.message || "Server error. Please try again."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <section className="py-12 bg-gray-100 min-h-screen flex items-center justify-center px-4">
@@ -77,8 +81,9 @@ export default function LoginPage() {
           <TextField
             fullWidth
             label="Email Address"
-            variant="outlined"
             name="email"
+            type="email"
+            variant="outlined"
             value={formFields.email}
             onChange={handleChange}
             disabled={loading}
@@ -89,8 +94,8 @@ export default function LoginPage() {
               fullWidth
               type={isShowPassword ? "text" : "password"}
               label="Password"
-              variant="outlined"
               name="password"
+              variant="outlined"
               value={formFields.password}
               onChange={handleChange}
               disabled={loading}

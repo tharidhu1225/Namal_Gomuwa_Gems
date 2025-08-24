@@ -7,25 +7,41 @@ import toast from "react-hot-toast";
 
 export default function Register() {
   const [isShowPassword, setIsShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [formFields, setFormFields] = useState({
     name: "",
     email: "",
     password: "",
   });
-
+  const [errors, setErrors] = useState({});
   const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormFields({ ...formFields, [e.target.name]: e.target.value });
+    setErrors({ ...errors, [e.target.name]: "" });
+  };
+
+  const validateFields = () => {
+    const errs = {};
+    if (!formFields.name.trim()) errs.name = "Name is required";
+    if (!formFields.email.trim()) errs.email = "Email is required";
+    else if (!/\S+@\S+\.\S+/.test(formFields.email))
+      errs.email = "Enter a valid email";
+    if (!formFields.password.trim()) errs.password = "Password is required";
+    else if (formFields.password.length < 6)
+      errs.password = "Password must be at least 6 characters";
+    return errs;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    if (!formFields.name || !formFields.email || !formFields.password) {
-      return alert("Please fill all fields.");
+    const errs = validateFields();
+    if (Object.keys(errs).length > 0) {
+      setErrors(errs);
+      return;
     }
 
+    setLoading(true);
     try {
       const res = await fetch(
         `${import.meta.env.VITE_BACKEND_URL}/api/user/register`,
@@ -37,16 +53,16 @@ export default function Register() {
       );
 
       const data = await res.json();
-
       if (data.success) {
-  toast.success(data.message);
-  navigate("/verify", { state: { email: formFields.email } }); // pass email to verify page
-} else {
-  toast.error(data.message || "Registration failed.");
-}
-
+        toast.success(data.message);
+        navigate("/verify", { state: { email: formFields.email } });
+      } else {
+        toast.error(data.message || "Registration failed.");
+      }
     } catch (err) {
-      alert("Server error. Please try again.");
+      toast.error("Server error. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -61,19 +77,21 @@ export default function Register() {
           <TextField
             fullWidth
             label="Full Name"
-            variant="outlined"
             name="name"
             value={formFields.name}
             onChange={handleChange}
+            error={!!errors.name}
+            helperText={errors.name}
           />
           <TextField
             fullWidth
             label="Email Address"
-            variant="outlined"
             name="email"
             type="email"
             value={formFields.email}
             onChange={handleChange}
+            error={!!errors.email}
+            helperText={errors.email}
           />
 
           <div className="relative">
@@ -81,10 +99,11 @@ export default function Register() {
               fullWidth
               type={isShowPassword ? "text" : "password"}
               label="Password"
-              variant="outlined"
               name="password"
               value={formFields.password}
               onChange={handleChange}
+              error={!!errors.password}
+              helperText={errors.password}
             />
             <Button
               type="button"
@@ -103,14 +122,18 @@ export default function Register() {
             type="submit"
             variant="contained"
             fullWidth
+            disabled={loading}
             className="!bg-yellow-500 hover:!bg-yellow-600"
           >
-            Register
+            {loading ? "Registering..." : "Register"}
           </Button>
 
           <div className="text-center text-sm text-gray-600">
             Already have an account?{" "}
-            <Link to="/login" className="text-yellow-600 font-medium hover:underline">
+            <Link
+              to="/login"
+              className="text-yellow-600 font-medium hover:underline"
+            >
               Login
             </Link>
           </div>

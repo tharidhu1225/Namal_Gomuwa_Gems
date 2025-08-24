@@ -1,7 +1,7 @@
-import axios from "axios";
 import React, { useEffect, useState } from "react";
-import toast from "react-hot-toast";
+import axios from "axios";
 import { useLocation, useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 
 export default function CheckoutPage() {
   const location = useLocation();
@@ -24,74 +24,55 @@ export default function CheckoutPage() {
     mobile: "",
   });
 
+  const token = localStorage.getItem("token");
   const subTotal = product?.price * qty;
   const total = subTotal;
 
-  // Fetch user on load
+  // Fetch logged-in user
   useEffect(() => {
     const fetchUser = async () => {
+      if (!token) return navigate("/login");
       try {
         const res = await fetch(
           `${import.meta.env.VITE_BACKEND_URL}/api/user/user-details`,
-          {
-            credentials: "include",
-            cache: "no-store",
-          }
+          { headers: { Authorization: `Bearer ${token}` }, cache: "no-store" }
         );
         const data = await res.json();
         if (!data.success) return navigate("/login");
         setUser(data.data);
       } catch (err) {
-        console.error("Error fetching user:", err);
+        console.error(err);
         navigate("/login");
       }
     };
     fetchUser();
-  }, [navigate]);
+  }, [navigate, token]);
 
-  // Fetch addresses for user
+  // Fetch user addresses
   useEffect(() => {
     const fetchAddresses = async () => {
       try {
         const res = await axios.get(
           `${import.meta.env.VITE_BACKEND_URL}/api/address/user`,
-          {
-            withCredentials: true,
-            headers: {
-              "Cache-Control": "no-cache",
-              Pragma: "no-cache",
-            },
-          }
+          { headers: { Authorization: `Bearer ${token}` } }
         );
-        const data = res.data;
-
-        // 🚨 Your backend MUST return an array of addresses like: { addresses: [...] }
-        const fetched = Array.isArray(data.addresses) ? data.addresses : [];
+        const fetched = Array.isArray(res.data.addresses) ? res.data.addresses : [];
         setAddresses(fetched);
         setSelectedAddress(fetched[0]?._id || null);
       } catch (err) {
-        console.error("Failed to fetch addresses:", err);
-        setAddresses([]);
+        console.error(err);
       }
     };
     if (user) fetchAddresses();
-  }, [user]);
+  }, [user, token]);
 
+  // Add new address
   const handleAddAddress = async () => {
-    if (
-      !newAddress.address_line ||
-      !newAddress.city ||
-      !newAddress.state ||
-      !newAddress.pincode ||
-      !newAddress.mobile
-    ) {
-      toast.error("Please fill all required fields.");
-      return;
+    if (!newAddress.address_line || !newAddress.city || !newAddress.state || !newAddress.pincode || !newAddress.mobile) {
+      return toast.error("Please fill all required fields.");
     }
-
     if (!/^\d{10,15}$/.test(newAddress.mobile)) {
-      toast.error("Invalid mobile number (10-15 digits).");
-      return;
+      return toast.error("Invalid mobile number (10-15 digits).");
     }
 
     setAddressLoading(true);
@@ -99,50 +80,33 @@ export default function CheckoutPage() {
       const res = await axios.post(
         `${import.meta.env.VITE_BACKEND_URL}/api/address/add`,
         newAddress,
-        {
-          withCredentials: true,
-          headers: { "Content-Type": "application/json" },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
-
-      const added = res.data;
-      if (res.status === 201 && added) {
+      if (res.status === 201) {
         toast.success("Address added!");
+        setAddresses([res.data, ...addresses]);
+        setSelectedAddress(res.data._id);
         setShowAddForm(false);
-        setNewAddress({
-          address_line: "",
-          city: "",
-          state: "",
-          pincode: "",
-          county: "",
-          mobile: "",
-        });
-        setAddresses((prev) => [added, ...prev]);
-        setSelectedAddress(added._id);
+        setNewAddress({ address_line: "", city: "", state: "", pincode: "", county: "", mobile: "" });
       } else {
         toast.error("Failed to add address.");
       }
     } catch (err) {
-      console.error("Add address error:", err);
+      console.error(err);
       toast.error("Error adding address.");
     } finally {
       setAddressLoading(false);
     }
   };
 
+  // Place order
   const handlePlaceOrder = async () => {
-    if (!selectedAddress) {
-      toast.error("Please select a delivery address.");
-      return;
-    }
+    if (!selectedAddress) return toast.error("Please select a delivery address.");
 
     setLoading(true);
     const payload = {
       productId: product._id,
-      product_details: {
-        name: product.name,
-        Image: product.images.map((img) => img.url),
-      },
+      product_details: { name: product.name, Image: product.images.map((img) => img.url) },
       qty,
       delivery_address: selectedAddress,
       subTotalAmt: subTotal,
@@ -153,38 +117,25 @@ export default function CheckoutPage() {
       const res = await axios.post(
         `${import.meta.env.VITE_BACKEND_URL}/api/orders/create`,
         payload,
-        {
-          headers: { "Content-Type": "application/json" },
-          withCredentials: true,
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
-      const data = res.data;
-      if (data.success) {
-        setOrderSuccess(data.order);
-      } else {
-        toast.error(data.message || "Order failed.");
-      }
+      if (res.data.success) setOrderSuccess(res.data.order);
+      else toast.error(res.data.message || "Order failed.");
     } catch (err) {
-      console.error("Order error:", err);
+      console.error(err);
       toast.error("Order could not be placed.");
     } finally {
       setLoading(false);
     }
   };
 
+  // Order success page
   if (orderSuccess) {
     return (
       <div className="max-w-lg mx-auto p-6 text-center">
         <h2 className="text-2xl font-bold mb-4">Order Placed!</h2>
-        <p>
-          Order ID: <span className="font-mono">{orderSuccess.orderId}</span>
-        </p>
-        <button
-          onClick={() => navigate("/orders")}
-          className="mt-6 btn-org px-4 py-2"
-        >
-          View My Orders
-        </button>
+        <p>Order ID: <span className="font-mono">{orderSuccess.orderId}</span></p>
+        <button onClick={() => navigate("/orders")} className="mt-6 btn-org px-4 py-2">View My Orders</button>
       </div>
     );
   }
@@ -197,11 +148,7 @@ export default function CheckoutPage() {
       {/* Product Summary */}
       {product && (
         <div className="flex items-center gap-4 border p-3 rounded-md">
-          <img
-            src={product.images[0]?.url || ""}
-            alt={product.name}
-            className="w-24 h-24 object-cover rounded"
-          />
+          <img src={product.images[0]?.url || ""} alt={product.name} className="w-24 h-24 object-cover rounded" />
           <div>
             <p className="font-medium">{product.name}</p>
             <p>Qty: {qty}</p>
@@ -212,108 +159,72 @@ export default function CheckoutPage() {
 
       {/* Address Selection */}
       <div>
-        <h3 className="font-medium mb-2">Select Delivery Address</h3>
+  <h3 className="font-medium mb-2">Select Delivery Address</h3>
 
-        {addresses.length > 0 ? (
-          addresses.map((addr) => (
-            <label
-              key={addr._id}
-              className="flex items-center border p-2 rounded mb-2 cursor-pointer"
-            >
-              <input
-                type="radio"
-                name="address"
-                value={addr._id}
-                checked={selectedAddress === addr._id}
-                onChange={() => setSelectedAddress(addr._id)}
-                className="mr-2"
-              />
-              <div>
-                <p className="font-medium">{addr.address_line}</p>
-                <p className="text-sm">
-                  {addr.city}, {addr.state} - {addr.pincode}
-                </p>
-                <p className="text-sm text-gray-600">Mobile: {addr.mobile}</p>
-              </div>
-            </label>
-          ))
-        ) : (
-          <p>No saved addresses found.</p>
-        )}
+  {addressLoading ? (
+    <div className="flex justify-center items-center py-4">
+      <CircularProgress size={30} />
+    </div>
+  ) : addresses.length > 0 ? (
+    addresses.map((addr) => (
+      <label
+        key={addr._id}
+        className="flex items-center border p-2 rounded mb-2 cursor-pointer hover:shadow-md transition"
+      >
+        <input
+          type="radio"
+          name="address"
+          value={addr._id}
+          checked={selectedAddress === addr._id}
+          onChange={() => setSelectedAddress(addr._id)}
+          className="mr-2"
+        />
+        <div>
+          <p className="font-medium">{addr.address_line}</p>
+          <p className="text-sm">{addr.city}, {addr.state} - {addr.pincode}</p>
+          <p className="text-sm text-gray-600">Mobile: {addr.mobile}</p>
+        </div>
+      </label>
+    ))
+  ) : (
+    <p className="text-gray-500">No saved addresses found.</p>
+  )}
 
-        <button
-          onClick={() => setShowAddForm(!showAddForm)}
-          className="text-sm text-blue-600 underline mt-2"
-        >
-          {showAddForm ? "Cancel" : "+ Add New Address"}
-        </button>
+  <button
+    onClick={() => setShowAddForm(!showAddForm)}
+    className="text-sm text-blue-600 underline mt-2"
+  >
+    {showAddForm ? "Cancel" : "+ Add New Address"}
+  </button>
 
-        {showAddForm && (
-          <div className="border p-3 mt-4 rounded space-y-2">
-            <input
-              type="text"
-              placeholder="Address Line *"
-              className="border w-full p-2 rounded"
-              value={newAddress.address_line}
-              onChange={(e) =>
-                setNewAddress({ ...newAddress, address_line: e.target.value })
-              }
-            />
-            <input
-              type="text"
-              placeholder="City *"
-              className="border w-full p-2 rounded"
-              value={newAddress.city}
-              onChange={(e) =>
-                setNewAddress({ ...newAddress, city: e.target.value })
-              }
-            />
-            <input
-              type="text"
-              placeholder="State *"
-              className="border w-full p-2 rounded"
-              value={newAddress.state}
-              onChange={(e) =>
-                setNewAddress({ ...newAddress, state: e.target.value })
-              }
-            />
-            <input
-              type="text"
-              placeholder="Pincode *"
-              className="border w-full p-2 rounded"
-              value={newAddress.pincode}
-              onChange={(e) =>
-                setNewAddress({ ...newAddress, pincode: e.target.value })
-              }
-            />
-            <input
-              type="text"
-              placeholder="County"
-              className="border w-full p-2 rounded"
-              value={newAddress.county}
-              onChange={(e) =>
-                setNewAddress({ ...newAddress, county: e.target.value })
-              }
-            />
-            <input
-              type="text"
-              placeholder="Mobile *"
-              className="border w-full p-2 rounded"
-              value={newAddress.mobile}
-              onChange={(e) =>
-                setNewAddress({ ...newAddress, mobile: e.target.value })
-              }
-            />
-            <button
-              onClick={handleAddAddress}
-              className="btn-org w-full py-2 mt-2"
-              disabled={addressLoading}
-            >
-              {addressLoading ? "Saving..." : "Save Address"}
-            </button>
-          </div>
-        )}
-      </div>
+  {/* Add Address Form */}
+  {showAddForm && (
+    <div className="border p-3 mt-4 rounded space-y-2 relative">
+      {addressLoading && (
+        <div className="absolute inset-0 bg-white/50 flex justify-center items-center rounded">
+          <CircularProgress size={25} />
+        </div>
+      )}
+      {["address_line", "city", "state", "pincode", "county", "mobile"].map((field) => (
+        <input
+          key={field}
+          type="text"
+          placeholder={field.replace("_", " ").replace(/\b\w/g, (c) => c.toUpperCase()) + (field !== "county" ? " *" : "")}
+          className="border w-full p-2 rounded"
+          value={newAddress[field]}
+          onChange={(e) => setNewAddress({ ...newAddress, [field]: e.target.value })}
+        />
+      ))}
+      <button
+        onClick={handleAddAddress}
+        className="btn-org w-full py-2 mt-2"
+        disabled={addressLoading}
+      >
+        {addressLoading ? "Saving..." : "Save Address"}
+      </button>
+    </div>
+  )}
+</div>
 
       {/* Order Summary */}
       <div className="border p-3 rounded">

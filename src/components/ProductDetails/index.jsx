@@ -6,7 +6,7 @@ import { IoGitCompareOutline } from "react-icons/io5";
 import Button from "@mui/material/Button";
 import Snackbar from "@mui/material/Snackbar";
 import MuiAlert from "@mui/material/Alert";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import QtyBox from "../QtyBox";
 
 const Alert = React.forwardRef(function Alert(props, ref) {
@@ -14,50 +14,49 @@ const Alert = React.forwardRef(function Alert(props, ref) {
 });
 
 export default function ProductDetailsComponent({ product }) {
-  const [productActionIndex, setProductActionIndex] = useState(null);
   const [user, setUser] = useState(null);
   const [snackOpen, setSnackOpen] = useState(false);
   const [qty, setQty] = useState(1);
   const navigate = useNavigate();
+  const token = localStorage.getItem("token")
 
   useEffect(() => {
     async function fetchUser() {
       try {
-        const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/user/user-details`, {
-          credentials: "include",
-          cache: "no-store",
-        });
-
+        const res = await fetch(
+          `${import.meta.env.VITE_BACKEND_URL}/api/user/user-details`,
+          {
+            headers: {
+    Authorization: `Bearer ${token}`,
+  },
+            cache: "no-store",
+          }
+        );
         const data = await res.json();
-        if (data.success) {
-          setUser(data.data);
-        } else {
-          setUser(null);
-        }
+        if (data.success) setUser(data.data);
       } catch (error) {
         console.error("Auth check error:", error);
-        setUser(null);
       }
     }
-
     fetchUser();
   }, []);
 
-  if (!product) {
-    return <p className="text-red-500">Product data is missing!</p>;
-  }
+  if (!product) return <p className="text-red-500">Product data is missing!</p>;
 
   const handleBuyNow = () => {
-    if (!user) {
-      setSnackOpen(true); // Show login required message
-    } else {
-      navigate("/checkout", { state: { product, qty } }); // Pass product and qty to checkout
-    }
+    if (!user) return setSnackOpen(true);
+    navigate("/checkout", { state: { product, qty } });
+  };
+
+  const handleAddToCart = () => {
+    if (!user) return setSnackOpen(true);
+    // implement add to cart logic here
+    console.log("Added to cart:", product.name, "Qty:", qty);
   };
 
   return (
     <div className="w-full">
-      <h1 className="text-[20px] sm:text-[24px] font-[600] mb-2">{product?.name}</h1>
+      <h1 className="text-[20px] sm:text-[24px] font-[600] mb-2">{product.name}</h1>
 
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-1 sm:gap-3">
         <span className="text-gray-400 text-[13px]">
@@ -74,9 +73,7 @@ export default function ProductDetailsComponent({ product }) {
         </span>
         <span className="text-[13px] sm:text-[14px]">
           In Stock:{" "}
-          <span className="text-green-600 font-bold">
-            {product?.stock || 0} Items
-          </span>
+          <span className="text-green-600 font-bold">{product?.stock || 0} Items</span>
         </span>
       </div>
 
@@ -92,6 +89,7 @@ export default function ProductDetailsComponent({ product }) {
         </div>
 
         <Button
+          onClick={handleAddToCart}
           className="btn-org !capitalize flex gap-2 w-full sm:w-auto justify-center"
         >
           <FaCartPlus className="text-[20px]" />
@@ -119,7 +117,6 @@ export default function ProductDetailsComponent({ product }) {
         </span>
       </div>
 
-      {/* Snackbar for Login Warning */}
       <Snackbar
         open={snackOpen}
         autoHideDuration={3000}
@@ -127,7 +124,7 @@ export default function ProductDetailsComponent({ product }) {
         anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
       >
         <Alert severity="warning" onClose={() => setSnackOpen(false)}>
-          Please login to continue to checkout.
+          Please login to continue.
         </Alert>
       </Snackbar>
     </div>

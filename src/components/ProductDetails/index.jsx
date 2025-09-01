@@ -8,6 +8,7 @@ import Snackbar from "@mui/material/Snackbar";
 import MuiAlert from "@mui/material/Alert";
 import { useNavigate } from "react-router-dom";
 import QtyBox from "../QtyBox";
+import toast from "react-hot-toast";
 
 const Alert = React.forwardRef(function Alert(props, ref) {
   return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
@@ -48,11 +49,50 @@ export default function ProductDetailsComponent({ product }) {
     navigate("/checkout", { state: { product, qty } });
   };
 
-  const handleAddToCart = () => {
-    if (!user) return setSnackOpen(true);
-    // implement add to cart logic here
-    console.log("Added to cart:", product.name, "Qty:", qty);
-  };
+
+   //Add to cart Funtionality
+   const [isLoading, setIsLoading] = useState(false);
+
+const handleAddToCart = async () => {
+  if (!user) {
+    setSnackOpen(true); // show login snackbar
+    return;
+  }
+
+  setIsLoading(true);
+
+  try {
+    const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/cart/add`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`, // JWT for protected route
+      },
+      body: JSON.stringify({
+        userId: user._id,
+        productId: product._id,
+        productType: product?.weight ? "gem" : "jewellery",
+        qty : qty
+      }),
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      toast.success("✅ Product added to cart!");
+      // Optional: Update cart badge, etc.
+    } else {
+      toast.warning(`⚠️ ${data.message || "Could not add to cart"}`);
+    }
+  } catch (error) {
+    console.error("Add to cart error:", error);
+    toast.error("Error occurred while adding to cart.");
+  }finally {
+    setIsLoading(false);
+  }
+};
+
+
 
   return (
     <div className="w-full">
@@ -88,13 +128,11 @@ export default function ProductDetailsComponent({ product }) {
           <QtyBox onChange={(val) => setQty(val)} />
         </div>
 
-        <Button
-          onClick={handleAddToCart}
-          className="btn-org !capitalize flex gap-2 w-full sm:w-auto justify-center"
-        >
-          <FaCartPlus className="text-[20px]" />
-          Add To Cart
-        </Button>
+        <Button onClick={handleAddToCart} disabled={isLoading} className="btn-org !capitalize flex gap-2 w-full sm:w-auto justify-center">
+            <FaCartPlus />
+                   {isLoading ? "Adding..." : "Add to Cart"}
+          </Button>
+
 
         <Button
           onClick={handleBuyNow}

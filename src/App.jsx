@@ -11,6 +11,8 @@ import ProductDetails from "./pages/ProductDetails";
 import CheckoutPage from "./pages/Checkout";
 import LoginPage from "./pages/login";
 import MyAccount from "./pages/MyAccount";
+import MyOrdersPage from "./pages/MyOrders";
+import Cart from "./pages/Cart";
 
 export default function App() {
   return (
@@ -26,8 +28,11 @@ export default function App() {
             <Route path="/login" element={<LoginPage/>} />
             <Route path="/register" element={<Register />} />
             <Route path="/verify" element={<Verify />} />
+            <Route path="/orders" element={<MyOrdersPage />} />
             <Route path="/productDetails/:id" element={<ProductDetails/>} />
             <Route path="/checkout" element={<CheckoutPage />} />
+            <Route path="/cart" element={<Cart/>} />
+            <Route path="*" element={<div className="text-center text-xl">404 - Page Not Found</div>} />
           </Routes>
         </main>
 

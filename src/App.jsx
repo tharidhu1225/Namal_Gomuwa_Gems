@@ -13,6 +13,10 @@ import LoginPage from "./pages/login";
 import MyAccount from "./pages/MyAccount";
 import MyOrdersPage from "./pages/MyOrders";
 import Cart from "./pages/Cart";
+import About from "./pages/About";
+import NotFound from "./components/404";
+import Contact from "./pages/Contact";
+import Shop from "./pages/Shop";
 
 export default function App() {
   return (
@@ -23,7 +27,7 @@ export default function App() {
         <main className="container mx-auto p-4 flex-grow">
           <Routes>
             <Route path="/" element={<Home/>} />
-            <Route path="/about" element={<div className="text-center text-xl">About Page</div>} />
+            <Route path="/about" element={<About/>} />
             <Route path="/profile" element={<MyAccount />} />
             <Route path="/login" element={<LoginPage/>} />
             <Route path="/register" element={<Register />} />
@@ -32,7 +36,9 @@ export default function App() {
             <Route path="/productDetails/:id" element={<ProductDetails/>} />
             <Route path="/checkout" element={<CheckoutPage />} />
             <Route path="/cart" element={<Cart/>} />
-            <Route path="*" element={<div className="text-center text-xl">404 - Page Not Found</div>} />
+            <Route path="/contact" element={<Contact/>} />
+            <Route path="/shop" element={<Shop/>} />
+            <Route path="*" element={<NotFound/>} />
           </Routes>
         </main>
 

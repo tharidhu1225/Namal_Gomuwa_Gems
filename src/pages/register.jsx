@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
+import CircularProgress from "@mui/material/CircularProgress";
 import { IoMdEye, IoMdEyeOff } from "react-icons/io";
 import { Link, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
@@ -41,7 +42,9 @@ export default function Register() {
       return;
     }
 
+    // HIDE FORM + SHOW LOADER
     setLoading(true);
+
     try {
       const res = await fetch(
         `${import.meta.env.VITE_BACKEND_URL}/api/user/register`,
@@ -55,89 +58,106 @@ export default function Register() {
       const data = await res.json();
       if (data.success) {
         toast.success(data.message);
-        navigate("/verify", { state: { email: formFields.email } });
+        setTimeout(() => {
+          navigate("/verify", { state: { email: formFields.email } });
+        }, 1000);
       } else {
         toast.error(data.message || "Registration failed.");
+        setLoading(false);
       }
     } catch (err) {
       toast.error("Server error. Please try again.");
-    } finally {
       setLoading(false);
     }
   };
 
   return (
     <section className="py-12 bg-gray-100 min-h-screen flex items-center justify-center">
-      <div className="w-full max-w-md bg-white shadow-lg rounded-lg p-8">
-        <h2 className="text-center text-2xl font-semibold text-gray-800 mb-6">
-          Create Your Account
-        </h2>
+      <div className="w-full max-w-md relative">
 
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <TextField
-            fullWidth
-            label="Full Name"
-            name="name"
-            value={formFields.name}
-            onChange={handleChange}
-            error={!!errors.name}
-            helperText={errors.name}
-          />
-          <TextField
-            fullWidth
-            label="Email Address"
-            name="email"
-            type="email"
-            value={formFields.email}
-            onChange={handleChange}
-            error={!!errors.email}
-            helperText={errors.email}
-          />
-
-          <div className="relative">
-            <TextField
-              fullWidth
-              type={isShowPassword ? "text" : "password"}
-              label="Password"
-              name="password"
-              value={formFields.password}
-              onChange={handleChange}
-              error={!!errors.password}
-              helperText={errors.password}
-            />
-            <Button
-              type="button"
-              onClick={() => setIsShowPassword(!isShowPassword)}
-              className="!absolute !top-[10px] !right-[10px] !min-w-[35px] !rounded-full !text-gray-700"
-            >
-              {isShowPassword ? (
-                <IoMdEye className="text-xl" />
-              ) : (
-                <IoMdEyeOff className="text-xl" />
-              )}
-            </Button>
+        {/* --- LOADING SCREEN (FULL FORM HIDDEN) --- */}
+        {loading ? (
+          <div className="bg-white shadow-xl rounded-xl p-10 flex flex-col items-center justify-center animate-fade-in">
+            <CircularProgress size={60} thickness={4} />
+            <p className="mt-5 text-gray-700 text-lg font-medium">
+              Creating your account…
+            </p>
           </div>
+        ) : (
+          /* --- REGISTER FORM (VISIBLE WHEN NOT LOADING) --- */
+          <div className="bg-white shadow-xl rounded-xl p-8 animate-fade-in">
+            <h2 className="text-center text-2xl font-semibold text-gray-800 mb-6">
+              Create Your Account
+            </h2>
 
-          <Button
-            type="submit"
-            variant="contained"
-            fullWidth
-            disabled={loading}
-            className="!bg-yellow-500 hover:!bg-yellow-600"
-          >
-            {loading ? "Registering..." : "Register"}
-          </Button>
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <TextField
+                fullWidth
+                label="Full Name"
+                name="name"
+                value={formFields.name}
+                onChange={handleChange}
+                error={!!errors.name}
+                helperText={errors.name}
+              />
 
-          <div className="text-center text-sm text-gray-600">
-            Already have an account?{" "}
-            <Link
-              to="/login"
-              className="text-yellow-600 font-medium hover:underline"
-            >
-              Login
-            </Link>
+              <TextField
+                fullWidth
+                label="Email Address"
+                type="email"
+                name="email"
+                value={formFields.email}
+                onChange={handleChange}
+                error={!!errors.email}
+                helperText={errors.email}
+              />
+
+              <div className="relative">
+                <TextField
+                  fullWidth
+                  type={isShowPassword ? "text" : "password"}
+                  label="Password"
+                  name="password"
+                  value={formFields.password}
+                  onChange={handleChange}
+                  error={!!errors.password}
+                  helperText={errors.password}
+                />
+
+                <Button
+                  type="button"
+                  onClick={() => setIsShowPassword(!isShowPassword)}
+                  className="!absolute !top-[10px] !right-[10px] !min-w-[35px] !rounded-full !text-gray-700"
+                >
+                  {isShowPassword ? (
+                    <IoMdEye className="text-xl" />
+                  ) : (
+                    <IoMdEyeOff className="text-xl" />
+                  )}
+                </Button>
+              </div>
+
+              <Button
+                type="submit"
+                variant="contained"
+                fullWidth
+                className="!bg-blue-600 hover:!bg-blue-700 !py-2 !text-lg"
+              >
+                Register
+              </Button>
+
+              <div className="text-center text-sm text-gray-600">
+                Already have an account?{" "}
+                <Link
+                  to="/login"
+                  className="text-blue-600 font-medium hover:underline"
+                >
+                  Login
+                </Link>
+              </div>
+            </form>
           </div>
-        </form>
+        )}
       </div>
     </section>
   );

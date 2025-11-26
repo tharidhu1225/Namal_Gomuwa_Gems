@@ -17,6 +17,7 @@ import About from "./pages/About";
 import NotFound from "./components/404";
 import Contact from "./pages/Contact";
 import Shop from "./pages/Shop";
+import AddressPage from "./pages/Address";
 
 export default function App() {
   return (
@@ -38,6 +39,7 @@ export default function App() {
             <Route path="/cart" element={<Cart/>} />
             <Route path="/contact" element={<Contact/>} />
             <Route path="/shop" element={<Shop/>} />
+            <Route path="/address" element={<AddressPage/>} />
             <Route path="*" element={<NotFound/>} />
           </Routes>
         </main>

@@ -184,37 +184,46 @@ export default function CheckoutPage() {
           )}
 
       {/* Address Selection */}
-      <div>
-        <h3 className="font-medium mb-2">Select Delivery Address</h3>
-        {addressLoading ? (
-          <div className="flex justify-center items-center py-4">
-            <CircularProgress size={30} />
-          </div>
-        ) : addresses.length > 0 ? (
-          addresses.map((addr) => (
-            <label
-              key={addr._id}
-              className="flex items-center border p-2 rounded mb-2 cursor-pointer hover:shadow-md transition"
-            >
-              <input
-                type="radio"
-                name="address"
-                value={addr._id}
-                checked={selectedAddress === addr._id}
-                onChange={() => setSelectedAddress(addr._id)}
-                className="mr-2"
-              />
-              <div>
-                <p className="font-medium">{addr.address_line}</p>
-                <p className="text-sm">{addr.city}, {addr.state} - {addr.pincode}</p>
-                <p className="text-sm text-gray-600">Mobile: {addr.mobile}</p>
-              </div>
-            </label>
-          ))
-        ) : (
-          <p className="text-gray-500">No saved addresses found.</p>
-        )}
-      </div>
+<div>
+  <div className="flex justify-between items-center mb-2">
+    <h3 className="font-medium">Select Delivery Address</h3>
+    <button
+      onClick={() => navigate("/address")}
+      className="text-blue-600 font-medium hover:underline"
+    >
+      + Add New Address
+    </button>
+  </div>
+
+  {addressLoading ? (
+    <div className="flex justify-center items-center py-4">
+      <CircularProgress size={30} />
+    </div>
+  ) : addresses.length > 0 ? (
+    addresses.map((addr) => (
+      <label
+        key={addr._id}
+        className="flex items-center border p-2 rounded mb-2 cursor-pointer hover:shadow-md transition"
+      >
+        <input
+          type="radio"
+          name="address"
+          value={addr._id}
+          checked={selectedAddress === addr._id}
+          onChange={() => setSelectedAddress(addr._id)}
+          className="mr-2"
+        />
+        <div>
+          <p className="font-medium">{addr.address_line}</p>
+          <p className="text-sm">{addr.city}, {addr.state} - {addr.pincode}</p>
+          <p className="text-sm text-gray-600">Mobile: {addr.mobile}</p>
+        </div>
+      </label>
+    ))
+  ) : (
+    <p className="text-gray-500">No saved addresses found.</p>
+  )}
+</div>
 
       {/* Payment Method */}
       <div>
